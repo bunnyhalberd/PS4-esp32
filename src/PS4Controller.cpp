@@ -14,8 +14,11 @@ extern "C" {
 PS4Controller::PS4Controller() {}
 
 bool PS4Controller::begin() {
+  log_v("in begin()"); 
   ps4SetEventObjectCallback(this, &PS4Controller::_event_callback);
   ps4SetConnectionObjectCallback(this, &PS4Controller::_connection_callback);
+  log_v("set callbacks");
+
 
   if (!btStarted() && !btStart()) {
     log_e("btStart failed");
@@ -23,6 +26,7 @@ bool PS4Controller::begin() {
   }
 
   esp_bluedroid_status_t btState = esp_bluedroid_get_status();
+  log_v("btState is %d", btState);
   if (btState == ESP_BLUEDROID_STATUS_UNINITIALIZED) {
     if (esp_bluedroid_init()) {
       log_e("esp_bluedroid_init failed");
@@ -31,19 +35,30 @@ bool PS4Controller::begin() {
   }
 
   if (btState != ESP_BLUEDROID_STATUS_ENABLED) {
+    log_v("btState was not ESP_BLUEDROID_STATUS_ENABLED");
     if (esp_bluedroid_enable()) {
       log_e("esp_bluedroid_enable failed");
       return false;
     }
   }
+  else
+  {
+    log_v("btState does equal ESP_BLUEDROID_STATUS_ENABLED");
+  }
 
+  btState = esp_bluedroid_get_status();
+  log_v("btState is now %d", btState);
+
+  log_v("about to call ps4Init()");
   ps4Init();
+  log_v("returned from ps4Init()");
   return true;
 }
 
 bool PS4Controller::begin(char* mac) {
   esp_bd_addr_t addr;
-    
+
+  log_v("in begin(char*)");  
   if (sscanf(mac, ESP_BD_ADDR_STR, ESP_BD_ADDR_HEX_PTR(addr)) != ESP_BD_ADDR_LEN) {
     log_e("Could not convert %s\n to a MAC address", mac);
     return false;
@@ -51,6 +66,7 @@ bool PS4Controller::begin(char* mac) {
 
   ps4SetBluetoothMacAddress(addr);
 
+  log_v("calling out to begin()");
   return begin();
 }
 
@@ -99,6 +115,8 @@ void PS4Controller::_event_callback(
 }
 
 void PS4Controller::_connection_callback(void* object, uint8_t isConnected) {
+  log_v("enter PS4Controller::_connection_callback(void* object, uint8_t isConnected)");
+
   PS4Controller* This = (PS4Controller*)object;
 
   if (isConnected) {
@@ -114,6 +132,8 @@ void PS4Controller::_connection_callback(void* object, uint8_t isConnected) {
       This->_callback_disconnect();
     }
   }
+
+  log_v("leave PS4Controller::_connection_callback(void* object, uint8_t isConnected)");
 }
 
 #if !defined(NO_GLOBAL_INSTANCES)

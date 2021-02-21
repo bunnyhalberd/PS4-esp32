@@ -2,6 +2,8 @@
 
 #include <esp_system.h>
 
+#include <Arduino.h>
+
 #include "ps4_int.h"
 
 /********************************************************************************/
@@ -16,11 +18,11 @@ static const uint8_t hid_cmd_payload_ps4_enable[] = {0x43, 0x02};
 
 static ps4_connection_callback_t ps4_connection_cb = NULL;
 static ps4_connection_object_callback_t ps4_connection_object_cb = NULL;
-static void* ps4_connection_object = NULL;
+static void *ps4_connection_object = NULL;
 
 static ps4_event_callback_t ps4_event_cb = NULL;
 static ps4_event_object_callback_t ps4_event_object_cb = NULL;
-static void* ps4_event_object = NULL;
+static void *ps4_event_object = NULL;
 
 /********************************************************************************/
 /*                      P U B L I C    F U N C T I O N S */
@@ -37,9 +39,12 @@ static void* ps4_event_object = NULL;
 ** Returns          void
 **
 *******************************************************************************/
-void ps4Init() {
+void ps4Init()
+{
+  log_v("enter ps4Init()");
   sppInit();
   gapInitServices();
+  log_v("leave ps4Init()");
 }
 
 /*******************************************************************************
@@ -66,7 +71,9 @@ bool ps4IsConnected() { return gapIsConnected(); }
 ** Returns          void
 **
 *******************************************************************************/
-void ps4Enable() {
+void ps4Enable()
+{
+  log_v("enter ps4Enable()");
   uint16_t length = sizeof(hid_cmd_payload_ps4_enable);
   hid_cmd_t hidCommand;
 
@@ -77,6 +84,7 @@ void ps4Enable() {
 
   gapSendHid(&hidCommand, length);
   ps4SetLed(32, 32, 200);
+  log_v("leaving ps4Enable()");
 }
 
 /*******************************************************************************
@@ -89,19 +97,21 @@ void ps4Enable() {
 ** Returns          void
 **
 *******************************************************************************/
-void ps4Cmd(ps4_cmd_t cmd) {
+void ps4Cmd(ps4_cmd_t cmd)
+{
+  log_v("enter ps4Cmd(ps4_cmd_t)");
   hid_cmd_t hidCommand = {.data = {0x80, 0x00, 0xFF}};
   uint16_t length = sizeof(hidCommand.data);
 
   hidCommand.code = hid_cmd_code_set_report | hid_cmd_code_type_output;
   hidCommand.identifier = hid_cmd_identifier_ps4_control;
 
-  hidCommand.data[ps4_control_packet_index_small_rumble] = cmd.smallRumble;  // Small Rumble
-  hidCommand.data[ps4_control_packet_index_large_rumble] = cmd.largeRumble;  // Big rumble
+  hidCommand.data[ps4_control_packet_index_small_rumble] = cmd.smallRumble; // Small Rumble
+  hidCommand.data[ps4_control_packet_index_large_rumble] = cmd.largeRumble; // Big rumble
 
-  hidCommand.data[ps4_control_packet_index_red] = cmd.r;    // Red
-  hidCommand.data[ps4_control_packet_index_green] = cmd.g;  // Green
-  hidCommand.data[ps4_control_packet_index_blue] = cmd.b;   // Blue
+  hidCommand.data[ps4_control_packet_index_red] = cmd.r;   // Red
+  hidCommand.data[ps4_control_packet_index_green] = cmd.g; // Green
+  hidCommand.data[ps4_control_packet_index_blue] = cmd.b;  // Blue
 
   // Time to flash bright (255 = 2.5 seconds)
   hidCommand.data[ps4_control_packet_index_flash_on_time] = cmd.flashOn;
@@ -109,6 +119,7 @@ void ps4Cmd(ps4_cmd_t cmd) {
   hidCommand.data[ps4_control_packet_index_flash_off_time] = cmd.flashOff;
 
   gapSendHid(&hidCommand, length);
+  log_v("leave ps4Cmd(ps4_cmd_t)");
 }
 
 /*******************************************************************************
@@ -121,7 +132,8 @@ void ps4Cmd(ps4_cmd_t cmd) {
 ** Returns          void
 **
 *******************************************************************************/
-void ps4SetLed(uint8_t r, uint8_t g, uint8_t b) {
+void ps4SetLed(uint8_t r, uint8_t g, uint8_t b)
+{
   ps4_cmd_t cmd = {0};
 
   cmd.r = r;
@@ -154,8 +166,11 @@ void ps4SetOutput(ps4_cmd_t prevCommand) { ps4Cmd(prevCommand); }
 ** Returns          void
 **
 *******************************************************************************/
-void ps4SetConnectionCallback(ps4_connection_callback_t cb) {
+void ps4SetConnectionCallback(ps4_connection_callback_t cb)
+{
+  log_v("enter ps4SetConnectionCallback(ps4_connection_callback_t)");
   ps4_connection_cb = cb;
+  log_v("leave ps4SetConnectionCallback(ps4_connection_callback_t)");
 }
 
 /*******************************************************************************
@@ -169,9 +184,12 @@ void ps4SetConnectionCallback(ps4_connection_callback_t cb) {
 ** Returns          void
 **
 *******************************************************************************/
-void ps4SetConnectionObjectCallback(void* object, ps4_connection_object_callback_t cb) {
+void ps4SetConnectionObjectCallback(void *object, ps4_connection_object_callback_t cb)
+{
+  log_v("enter ps4SetConnectionObjectCallback(void*, ps4_connection_object_callback_t)");
   ps4_connection_object_cb = cb;
   ps4_connection_object = object;
+  log_v("leave ps4SetConnectionObjectCallback(void*, ps4_connection_object_callback_t)");
 }
 
 /*******************************************************************************
@@ -184,7 +202,11 @@ void ps4SetConnectionObjectCallback(void* object, ps4_connection_object_callback
 ** Returns          void
 **
 *******************************************************************************/
-void ps4SetEventCallback(ps4_event_callback_t cb) { ps4_event_cb = cb; }
+void ps4SetEventCallback(ps4_event_callback_t cb)
+{
+  log_v("in ps4SetEventCallback(ps4_event_callback_t)");
+  ps4_event_cb = cb;
+}
 
 /*******************************************************************************
 **
@@ -196,7 +218,9 @@ void ps4SetEventCallback(ps4_event_callback_t cb) { ps4_event_cb = cb; }
 ** Returns          void
 **
 *******************************************************************************/
-void ps4SetEventObjectCallback(void* object, ps4_event_object_callback_t cb) {
+void ps4SetEventObjectCallback(void *object, ps4_event_object_callback_t cb)
+{
+  log_v("in ps4SetEventCallback(void*, ps4_event_callback_t)");
   ps4_event_object_cb = cb;
   ps4_event_object = object;
 }
@@ -212,39 +236,51 @@ void ps4SetEventObjectCallback(void* object, ps4_event_object_callback_t cb) {
 ** Returns          void
 **
 *******************************************************************************/
-void ps4SetBluetoothMacAddress(const uint8_t* mac) {
+void ps4SetBluetoothMacAddress(const uint8_t *mac)
+{
   // The bluetooth MAC address is derived from the base MAC address
   // https://docs.espressif.com/projects/esp-idf/en/stable/api-reference/system/system.html#mac-address
   uint8_t baseMac[6];
   memcpy(baseMac, mac, 6);
   baseMac[5] -= 2;
+  log_v("settting bluetooth MAC");
   esp_base_mac_addr_set(baseMac);
+  log_v("done setting MAC");
 }
 
 /********************************************************************************/
 /*                      L O C A L    F U N C T I O N S */
 /********************************************************************************/
 
-void ps4ConnectEvent(uint8_t isConnected) {
-  if (isConnected) {
+void ps4ConnectEvent(uint8_t isConnected)
+{
+  log_v("starting ps4ConnectEvent(uint8_t): %d", isConnected);
+  if (isConnected)
+  {
+    log_v("about to call p4Enable()");
     ps4Enable();
   }
 
-  if (ps4_connection_cb != NULL) {
+  if (ps4_connection_cb != NULL)
+  {
     ps4_connection_cb(isConnected);
   }
 
-  if (ps4_connection_object_cb != NULL && ps4_connection_object != NULL) {
+  if (ps4_connection_object_cb != NULL && ps4_connection_object != NULL)
+  {
     ps4_connection_object_cb(ps4_connection_object, isConnected);
   }
 }
 
-void ps4PacketEvent(ps4_t ps4, ps4_event_t event, uint8_t* packet) {
-  if (ps4_event_cb != NULL) {
+void ps4PacketEvent(ps4_t ps4, ps4_event_t event, uint8_t *packet)
+{
+  if (ps4_event_cb != NULL)
+  {
     ps4_event_cb(ps4, event, packet);
   }
 
-  if (ps4_event_object_cb != NULL && ps4_event_object != NULL) {
+  if (ps4_event_object_cb != NULL && ps4_event_object != NULL)
+  {
     ps4_event_object_cb(ps4_event_object, ps4, event);
   }
 }

@@ -9,6 +9,8 @@
 #include "stack/bt_types.h"
 #include "stack/gap_api.h"
 
+#include <Arduino.h>
+
 #define PS4_TAG "PS4_GAP"
 #define BTM_SEC_SERVICE_FIRST_EMPTY 51
 #define BT_DEFAULT_BUFFER_SIZE (4096 + 16)
@@ -57,8 +59,10 @@ bool gapIsConnected() { return isConnected; }
 **
 *******************************************************************************/
 void gapInitServices() {
+  log_v("in gapInitServices()");
   gapHandleHIDControl = gapInitService("PS4-HIDC", BT_PSM_HID_CONTROL, BTM_SEC_SERVICE_FIRST_EMPTY);
   gapHandleHIDInterrupt = gapInitService("PS4-HIDI", BT_PSM_HID_INTERRUPT, BTM_SEC_SERVICE_FIRST_EMPTY + 1);
+  log_v("leaving gapInitServices()");
 }
 
 /*******************************************************************************
@@ -110,6 +114,9 @@ void gapSendHid(hid_cmd_t* hidCommand, uint8_t length) {
 **
 *******************************************************************************/
 static uint16_t gapInitService(char* name, uint16_t psm, uint8_t securityID) {
+
+  log_v("in gapInitService: %s, %d, %d", name, psm, securityID);
+
   uint16_t handle = GAP_ConnOpen(name, securityID, /*is_server=*/true, /*p_rem_bda=*/NULL, psm, &cfgInfo,
     &ertmInfo, /*security=*/0, /*chan_mode_mask=*/0, gapEventHandle);
 
